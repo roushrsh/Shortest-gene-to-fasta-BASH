@@ -1,0 +1,12 @@
+Using the Plant genome data set, find the shortest gene available at peach.genes
+
+awk 'num=="" && name=="" && start=="" && end=="" && ID==""|| (($5 - $4) < num) {{num = ($5 - $4)} {name = $3} {start =$4} {end=$5} {ID=$2} } END {print num "\t" name  "\t" start "\t" end "\t" ID}' peach.genes > shortest.txt
+
+*^here you set the variable you want. By going through and checking for the smallest by subtracting the end by the beginning, I end up with the smallest. I then store the length of the shortest gene, scaffold, start and end locations, as well as ID for the user into a shortest.txt file for the user to use.
+
+Sample output:
+400	scaffold_6	400	800	pch2-1
+
+Then extract the corresponding sequence from scaffold6 in a gene.fasta file
+
+startPosition=$(cut -f2 shortest.txt);position=$(grep -aob "$startPosition" peach.genome | tr ':' ' ' | awk '{print $1;}'); scaffL=$(awk '{print $2;}' shortest.txt); length=$(echo ${#scaffL}); start=$(awk '{print $3;}' shortest.txt); end=$(awk '{print $4;}' shortest.txt);  starter=$(($position + $start + $length)) ; ender=$(($position + $end + $length)) ; startSpace=$(echo $(($start / 80))); endSpace=$(echo $(($(($end-$start))/80))); starter=$(($starter + startSpace)) ; ender=$(($endSpace + ender + $startSpace)); genome=$(cut -z -c $starter-$ender peach.genome); printf ">$scaffL\n$genome" > gene.fa
